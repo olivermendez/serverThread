@@ -152,24 +152,24 @@ void * forClient(void *ptr)
     ssize_t read_return;
     char buffer[BUFSIZ];
     char *file_path;
-    char receiveFileName[BUFSIZ];
+    char archivo[BUFSIZ];
     char cmd[BUFSIZ];
 
 
     // Número de subproceso significa la identificación del cliente
-    printf("Conectado en el tiempo:  [%lf] ---  Thread number [%ld]\n", cpu_time_used, pthread_self());
+    //printf("Conectado en el tiempo:  [%lf] ---  Thread number [%ld]\n", cpu_time_used, pthread_self());
  
     // hasta dejar de recibir seguir tomando información
-    while (recv(connect_socket, receiveFileName, sizeof(receiveFileName), 0)) {
+    while (recv(connect_socket, archivo, sizeof(archivo), 0)) {
 
-        if((strcmp(receiveFileName, "listServer") == 0
-           || strcmp(receiveFileName, "listLocal") == 0 || strcmp(receiveFileName, "help") == 0
-            || strcmp(receiveFileName, "exit") == 0 || strcmp(receiveFileName, "sendFile") == 0)) {
-            printf("--- Command <%s> ---\n", receiveFileName);
+        if((strcmp(archivo, "listServer") == 0
+           || strcmp(archivo, "listLocal") == 0 || strcmp(archivo, "help") == 0
+            || strcmp(archivo, "exit") == 0 || strcmp(archivo, "sendFile") == 0)) {
+            printf("--- Command <%s> ---\n", archivo);
             continue;
         }
 
-        file_path = receiveFileName;
+        file_path = archivo;
          
         fprintf(stderr, "Archivo recibido:   =>  %s\n", file_path);
          

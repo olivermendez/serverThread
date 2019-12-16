@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define BUFSIZ 1024  
+#define BUFSIZ 1024
 #define SOCKETERROR (-1)
 
 struct client {
@@ -24,9 +24,6 @@ struct client {
 
 // NOTE: proporcionar suficiente espacio para un puerto de 4 dígitos + EOS char
 enum { PORTSIZE = 5 };
-
-double cpu_time_used;
-clock_t start, end;
 
  
 void *forClient(void *ptr);
@@ -50,7 +47,7 @@ int main(int argc, char **argv)
 
     //Sin problemas
     int enable = 1;
-    //int filefd;  // NOTE: this is never initialized/used
+    
     int server_sockfd;
 
     //Asignacion del puerto para conectarse
@@ -109,7 +106,7 @@ int main(int argc, char **argv)
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr,1);
-    start = clock();
+
 
     while (1) {
 
@@ -140,8 +137,7 @@ int main(int argc, char **argv)
 
 void * forClient(void *ptr)
 {
-    end = clock();
-    cpu_time_used = 1000 * (((double) (end - start)) / CLOCKS_PER_SEC);
+
 #if 0
     int connect_socket = (int) ptr;
 #else
@@ -157,8 +153,6 @@ void * forClient(void *ptr)
 
 
     // Número de subproceso significa la identificación del cliente
-    //printf("Conectado en el tiempo:  [%lf] ---  Thread number [%ld]\n", cpu_time_used, pthread_self());
- 
     // hasta dejar de recibir seguir tomando información
     while (recv(connect_socket, archivo, sizeof(archivo), 0)) {
 
@@ -174,7 +168,7 @@ void * forClient(void *ptr)
         fprintf(stderr, "Archivo recibido:   =>  %s\n", file_path);
          
         filefd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-        if (filefd == -1) {
+        if (filefd == SOCKETERROR) {
             perror("open");
             exit(EXIT_FAILURE);
         }

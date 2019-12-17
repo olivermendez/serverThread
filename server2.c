@@ -28,17 +28,17 @@ enum { PORTSIZE = 5 };
  
 void *forClient(void *ptr);
 
-void portCleaner(const char* port_num) {
+//Limpiar los procesos que aun se queden escuchando en el puerto
+void limpiador_puerto(const char* port_num) {
     char temp[100] = "sudo lsof -t -i tcp:";
     sprintf(temp, "%s%s%s", temp, port_num, " | xargs kill -9;");
     system(temp);
-    //puts(temp);
 }
 
 void sig_handler(int signo)
 {
     if (signo == SIGINT)
-        printf("!!  OUCH,  Error de interrupcion \n");
+        printf("Error de interrupcion \n");
 }
 
 int main(int argc, char **argv)
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     struct sockaddr_in server_address;
     struct protoent *protoent;
     //protocolo a utilizar "tcp"
-    char protoname[] = "tcp";
+    char tipo_puerto[] = "tcp";
  
 #if 0
     int socket_index = 0;
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     server_port = strtol(argv[1], NULL, 10);
      
     /* Se crea el socket para escucharlo.. */
-    protoent = getprotobyname(protoname);
+    protoent = getprotobyname(tipo_puerto);
     if (protoent == NULL) {
         perror("Falla el protocolo tcp");
         exit(EXIT_FAILURE);
@@ -85,31 +85,35 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
     if (setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0) {
-        perror("setsockopt(SO_REUSEADDR) failed");
+        perror("setsockopt(SO_REUSEADDR) falla");
         exit(EXIT_FAILURE);
     }
+    //Detalle para realizar la conexion
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(server_port);
     
+    //Chequear sin el bind, funciona correctamente
     if (bind(server_sockfd,(struct sockaddr*)&server_address,sizeof(server_address)) == SOCKETERROR) {
         perror(" Falla el bind");
-        portCleaner(argv[1]);
+        limpiador_puerto(argv[1]);
         exit(EXIT_FAILURE);
     }
+
+    //Chequear sin el listen, funciona correctamente
     if (listen(server_sockfd, 5) == SOCKETERROR) {
         perror("Error en el listen");
         exit(EXIT_FAILURE);
     }
     fprintf(stderr, "Escuchando en el puerto: %d\n", server_port);
- 
+
+    //Creando los threads
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr,1);
 
 
     while (1) {
-
         ctl = malloc(sizeof(struct client));
         if (ctl == NULL) {
             perror("malloc");
@@ -129,6 +133,7 @@ int main(int argc, char **argv)
         
         /* Creaando los threads segun la cantidad de peticiones del cliente*/
         pthread_create(&ctl->thread, &attr, forClient, ctl);
+
     }
      
     return EXIT_SUCCESS;

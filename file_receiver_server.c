@@ -28,6 +28,8 @@ enum { PORTSIZE = 5 };
 
  
 void *forClient(void *ptr);
+void menu();
+int opciones_inicio();
 
 //Limpiar los procesos que aun se queden escuchando en el puerto
 void limpiador_puerto(const char* port_num) {
@@ -44,6 +46,8 @@ void sig_handler(int signo)
 
 int main(int argc, char **argv)
 {
+
+    puts("Server activo! \n");
     struct addrinfo hints, *res;
 
     //Sin problemas
@@ -133,10 +137,48 @@ int main(int argc, char **argv)
         
         /* Creaando los threads segun la cantidad de peticiones del cliente*/
         pthread_create(&ctl->thread, &attr, forClient, ctl);
+        
 
     }
-     
+    
     return EXIT_SUCCESS;
+    pthread_attr_destroy(&attr);
+    menu();
+}
+
+int opciones_inicio () {
+	puts("Opciones:");
+	puts("	1. Ver Log // no terminado");
+	puts("	2. Borrar Log // no terminado");
+	puts("	3. Salir");
+	puts("Introduzca su selección:");
+	int inputs;
+	scanf("%d",&inputs);
+	return inputs;
+}
+
+void menu() {
+	while (1) {
+		int option = opciones_inicio();
+		switch(option)
+		{
+			case 1:
+                printf("No terminado aun \n");
+				break;
+
+			case 2:
+				printf("No terminado aun sorry, estamos trabajando \n");
+				break;
+			
+			case 3:
+                printf("Esta si xd, bye! \n");
+				exit(0);
+				break;
+			default:
+				puts("Opcion Inválida!");
+		}
+	}
+
 }
 
 
@@ -174,17 +216,17 @@ void * forClient(void *ptr)
          
         filefd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (filefd == SOCKETERROR) {
-            perror("open");
+            perror("falla el open");
             exit(EXIT_FAILURE);
         }
         do {
             read_return = read(connect_socket, buffer, BUFSIZ);
             if (read_return == SOCKETERROR) {
-                perror("read");
+                perror("falla el read");
                 exit(EXIT_FAILURE);
             }
             if (write(filefd, buffer, read_return) == SOCKETERROR) {
-                perror("write");
+                perror("falla el write");
                 exit(EXIT_FAILURE);
             }
         } while (read_return > 0);
@@ -194,9 +236,10 @@ void * forClient(void *ptr)
     }
      
     fprintf(stderr, "Se ha cerrado la conexion con el cliente\n");
+    //exit(0);
 
     close(connect_socket);
     free(ctl);
-     
     return (void *) 0;
+    
 }

@@ -5,7 +5,7 @@
 #include <signal.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <netdb.h>                      /* getprotobyname */
+#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -16,6 +16,7 @@
 #define SOCKETERROR (-1)
 
 struct client {
+    //Cantidad de clientes
     socklen_t client_len;
     struct sockaddr_in client_address;
     int client_sockfd;
@@ -46,13 +47,13 @@ int main(int argc, char **argv)
     struct addrinfo hints, *res;
 
     //Sin problemas
-    int enable = 1;
+    int disponible = 1;
     
     int server_sockfd;
 
     //Asignacion del puerto para conectarse
     unsigned short server_port = 9898u;
-    char portNum[PORTSIZE];
+    char port_no[PORTSIZE];
     struct sockaddr_in server_address;
     struct protoent *protoent;
     //protocolo a utilizar "tcp"
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
         perror("Error al crear el socket");
         exit(EXIT_FAILURE);
     }
-    if (setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0) {
+    if (setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &disponible, sizeof(disponible)) < 0) {
         perror("setsockopt(SO_REUSEADDR) falla");
         exit(EXIT_FAILURE);
     }
@@ -111,7 +112,6 @@ int main(int argc, char **argv)
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr,1);
-
 
     while (1) {
         ctl = malloc(sizeof(struct client));
@@ -189,16 +189,12 @@ void * forClient(void *ptr)
             }
         } while (read_return > 0);
          
-        // NOTE/BUG: filefd was never closed
         close(filefd);
          
     }
      
     fprintf(stderr, "Se ha cerrado la conexion con el cliente\n");
-     
-    // NOTE: do all client related cleanup here
-    // previously, the main thread was doing the close, which is why it had
-    // to do the pthread_join
+
     close(connect_socket);
     free(ctl);
      

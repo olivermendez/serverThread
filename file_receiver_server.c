@@ -15,15 +15,22 @@
 #define BUFSIZ 1024
 #define SOCKETERROR (-1)
 
+typedef struct {
+	char* data;
+	int size;
+}imagen;
+
+FILE *fptr;
+
 struct client {
     //Cantidad de clientes
     socklen_t client_len;
     struct sockaddr_in client_address;
     int client_sockfd;
     pthread_t thread;
+    
 };
 
-// NOTE: proporcionar suficiente espacio para un puerto de 4 dígitos + EOS char
 enum { PORTSIZE = 5 };
 
  
@@ -140,10 +147,11 @@ int main(int argc, char **argv)
         
 
     }
-    
-    return EXIT_SUCCESS;
     pthread_attr_destroy(&attr);
+    return EXIT_SUCCESS;
     menu();
+    
+    
 }
 
 int opciones_inicio () {
@@ -163,15 +171,15 @@ void menu() {
 		switch(option)
 		{
 			case 1:
-                printf("No terminado aun \n");
+                printf(">>>>>>No terminado aun \n");
 				break;
 
 			case 2:
-				printf("No terminado aun sorry, estamos trabajando \n");
+				printf(">>>>>>>No terminado aun sorry, estamos trabajando \n");
 				break;
 			
 			case 3:
-                printf("Esta si xd, bye! \n");
+                printf(">>>>>>>Esta si xd, bye! \n");
 				exit(0);
 				break;
 			default:
@@ -195,8 +203,13 @@ void * forClient(void *ptr)
     ssize_t read_return;
     char buffer[BUFSIZ];
     char *file_path;
+    imagen bufferimg[300];
+    
     char archivo[BUFSIZ];
     char cmd[BUFSIZ];
+    int n=0;
+    int xorVal;
+    int i,j;
 
 
     // Número de subproceso significa la identificación del cliente
@@ -212,7 +225,7 @@ void * forClient(void *ptr)
 
         file_path = archivo;
          
-        fprintf(stderr, "Archivo recibido:   =>  %s\n", file_path);
+        //fprintf(stderr, "Archivo recibido:   =>  %s\n", file_path);
          
         filefd = open(file_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
         if (filefd == SOCKETERROR) {
@@ -220,6 +233,22 @@ void * forClient(void *ptr)
             exit(EXIT_FAILURE);
         }
         do {
+            FILE *fl = fopen(file_path,"wb");
+
+            for(i = 0;i < n;i++){
+                    j = 0;
+                    while(j < bufferimg[i].size){
+                        bufferimg[i].data[j] = bufferimg[i].data[j] ^ xorVal;
+                        j++;
+                    }
+                    fwrite(bufferimg[i].data, 1, bufferimg[i].size, fl);
+                    free(bufferimg[i].data);
+                }
+                fclose(fl);
+                fprintf(stderr, "Archivo recibido:   =>  %s\n", file_path);
+
+                //Close(connect_socket);
+                //free(ctl);
             read_return = read(connect_socket, buffer, BUFSIZ);
             if (read_return == SOCKETERROR) {
                 perror("falla el read");
@@ -236,7 +265,9 @@ void * forClient(void *ptr)
     }
      
     fprintf(stderr, "Se ha cerrado la conexion con el cliente\n");
-    //exit(0);
+    fprintf(stderr, "Servidor activo \n");
+    menu();
+    opciones_inicio();
 
     close(connect_socket);
     free(ctl);
